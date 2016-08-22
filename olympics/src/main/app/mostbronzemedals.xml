@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="getMostBronzeMedalsFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getMostBronzeMedals" doc:name="HTTP"/>
+        <logger message="### STARTING FLOW: ###" level="INFO" doc:name="Logger"/>
+        <http:request config-ref="HTTP_Request_Configuration1" path="medal_by_country" method="GET" doc:name="API Request"/>
+        <logger message="### API REQUEST DONE. TRANSFORMING... ###" level="INFO" doc:name="Logger"/>
+        <dw:transform-message metadata:id="3d85a343-0a38-4b25-9352-6fc7367714c0" doc:name="Transform Message">
+            <dw:input-payload doc:sample="C:\Users\duait\AnypointStudio\workspace\olympics\src\api_output.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+(payload.results[0..4] map {
+	country:$.country_name,
+	medals:$.bronze_count
+} orderBy $.medals)[-1..0]]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="### TRANSFORM COMPLETE. ENDING FLOW. PAYLOAD: #['\n' + message.payloadAs(java.lang.String)] ###" level="INFO" doc:name="Logger"/>
+        <exception-strategy ref="Catch-Exception-Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+</mule>
